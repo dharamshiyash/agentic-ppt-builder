@@ -4,8 +4,8 @@ import shutil
 import sys
 import os
 import shutil
-# Add the parent directory to sys.path to resolve agentic_ppt_builder
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the current directory to sys.path to resolve local imports correctly on Streamlit Cloud
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from agentic_ppt_builder.graph import build_graph
 from dotenv import load_dotenv
