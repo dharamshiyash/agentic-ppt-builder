@@ -4,16 +4,24 @@ from langchain_core.output_parsers import StrOutputParser
 
 from agentic_ppt_builder.state import AgentState
 from agentic_ppt_builder.utils.image_fetcher import fetch_image_url
+from agentic_ppt_builder.utils.logger import get_logger
+from agentic_ppt_builder.utils.config import Config
+
+logger = get_logger(__name__)
 
 def image_agent(state: AgentState):
-    print("--- IMAGE AGENT ---")
-    slides = state['slide_content']
+    logger.info("--- IMAGE AGENT STARTED ---")
+    slides = state.get('slide_content', [])
+    
+    if not slides:
+        logger.warning("No slides to process in Image Agent.")
+        return {"slide_content": []}
     
     # We can process slides in parallel or batch. simpler to loop for now or simple llm call.
     # Let's do a simple loop since LangChain invocation overhead is small vs stability.
     # OR better: Ask LLM to generate keywords for ALL slides in one go.
     
-    llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.5)
+    llm = ChatGroq(model=Config.LLM_MODEL, temperature=0.5)
 
     prompt = ChatPromptTemplate.from_template(
         """
@@ -34,7 +42,7 @@ def image_agent(state: AgentState):
         try:
             keyword = chain.invoke({"title": slide['title'], "content": slide['content']})
             keyword = keyword.strip()
-            print(f"  - Generated Keyword for '{slide['title']}': {keyword}")
+            logger.info(f"Generated Keyword for '{slide['title']}': {keyword}")
             
             url = fetch_image_url(keyword)
             
@@ -45,7 +53,7 @@ def image_agent(state: AgentState):
             updated_slides.append(new_slide)
             
         except Exception as e:
-            print(f"Image Agent Error for slide {slide['title']}: {e}")
+            logger.error(f"Image Agent Error for slide {slide['title']}: {e}", exc_info=False)
             updated_slides.append(slide)
 
     return {"slide_content": updated_slides}

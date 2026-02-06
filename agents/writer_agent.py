@@ -6,6 +6,11 @@ from pydantic import BaseModel, Field
 
 from agentic_ppt_builder.state import AgentState, SlideContent
 
+from agentic_ppt_builder.utils.logger import get_logger
+from agentic_ppt_builder.utils.config import Config
+
+logger = get_logger(__name__)
+
 class SlideContentOutput(BaseModel):
     title: str = Field(description="Title of the slide")
     content: str = Field(description="Bullet points or detailed text for the slide")
@@ -14,11 +19,15 @@ class WriterOutput(BaseModel):
     slides: List[SlideContentOutput] = Field(description="List of fully written slides")
 
 def writer_agent(state: AgentState):
-    print("--- WRITER AGENT ---")
-    outline = state['presentation_outline']
-    depth = state['depth']
+    logger.info("--- WRITER AGENT STARTED ---")
+    outline = state.get('presentation_outline', [])
+    depth = state.get('depth', "Concise")
 
-    llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
+    if not outline:
+        logger.warning("No outline provided to Writer Agent.")
+        return {"slide_content": []}
+
+    llm = ChatGroq(model=Config.LLM_MODEL, temperature=0.7)
     parser = JsonOutputParser(pydantic_object=WriterOutput)
 
     prompt = ChatPromptTemplate.from_template(
@@ -61,5 +70,6 @@ def writer_agent(state: AgentState):
         return {"slide_content": final_slides}
 
     except Exception as e:
-        print(f"Writer Agent Error: {e}")
+
+        logger.error(f"Writer Agent Error: {e}", exc_info=True)
         return {"slide_content": []}

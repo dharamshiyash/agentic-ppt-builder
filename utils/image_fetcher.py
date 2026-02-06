@@ -1,10 +1,11 @@
 import requests
 import os
-from dotenv import load_dotenv
+from agentic_ppt_builder.utils.config import Config
+from agentic_ppt_builder.utils.logger import get_logger
 
-load_dotenv()
+logger = get_logger(__name__)
 
-UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+UNSPLASH_ACCESS_KEY = Config.UNSPLASH_ACCESS_KEY
 
 def fetch_image_url(query: str) -> str:
     """
@@ -23,6 +24,6 @@ def fetch_image_url(query: str) -> str:
             if data['results']:
                 return data['results'][0]['urls']['regular']
     except Exception as e:
-        print(f"Error fetching image: {e}")
+        logger.error(f"Error fetching image: {e}")
 
     return f"https://dummyimage.com/600x400/cccccc/000000&text={query.replace(' ', '+')}"

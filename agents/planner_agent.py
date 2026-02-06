@@ -6,6 +6,11 @@ from pydantic import BaseModel, Field
 
 from agentic_ppt_builder.state import AgentState
 
+from agentic_ppt_builder.utils.logger import get_logger
+from agentic_ppt_builder.utils.config import Config
+
+logger = get_logger(__name__)
+
 # Define Output Schema
 class ValidSlide(BaseModel):
     title: str = Field(description="Title of the slide")
@@ -15,12 +20,16 @@ class PlannerOutput(BaseModel):
     outline: List[ValidSlide] = Field(description="List of slides for the presentation")
 
 def planner_agent(state: AgentState):
-    print("--- PLANNER AGENT ---")
-    topic = state['topic']
-    count = state['slide_count']
-    depth = state['depth']
+    logger.info("--- PLANNER AGENT STARTED ---")
+    topic = state.get('topic', "")
+    count = state.get('slide_count', Config.DEFAULT_SLIDE_COUNT)
+    depth = state.get('depth', "Concise")
 
-    llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
+    if not topic:
+        logger.error("No topic provided.")
+        return {"presentation_outline": []}
+
+    llm = ChatGroq(model=Config.LLM_MODEL, temperature=0.7)
     
     parser = JsonOutputParser(pydantic_object=PlannerOutput)
 
@@ -53,6 +62,7 @@ def planner_agent(state: AgentState):
         return {"presentation_outline": outline}
 
     except Exception as e:
-        print(f"Planner Agent Error: {e}")
+
+        logger.error(f"Planner Agent Error: {e}", exc_info=True)
         # Fallback
         return {"presentation_outline": [{"title": "Error", "description": "Failed to generate outline"}]}
