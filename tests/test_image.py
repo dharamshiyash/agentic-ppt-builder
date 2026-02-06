@@ -1,7 +1,7 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-from agentic_ppt_builder.agents.image_agent import image_agent
+from agents.image_agent import image_agent
 
 def test_image_agent_no_slides(mock_agent_state):
     result = image_agent(mock_agent_state)
@@ -10,8 +10,8 @@ def test_image_agent_no_slides(mock_agent_state):
 def test_image_agent_success(mock_agent_state, mock_slides):
     mock_agent_state['slide_content'] = mock_slides
     
-    with patch('agentic_ppt_builder.agents.image_agent.ChatGroq') as MockLLM, \
-         patch('agentic_ppt_builder.agents.image_agent.fetch_image_url') as MockFetch:
+    with patch('agents.image_agent.ChatGroq') as MockLLM, \
+         patch('agents.image_agent.fetch_image_url') as MockFetch:
         
         # Mock keyword generation logic (chain invoke)
         # Since chain is buried, let's rely on the loop structure.
@@ -26,7 +26,7 @@ def test_image_agent_success(mock_agent_state, mock_slides):
         MockLLM.return_value = mock_llm_instance
         
         # Patching ChatPromptTemplate to return a mock that when piped returns a mock that when invoked returns "keyword"
-        with patch('agentic_ppt_builder.agents.image_agent.ChatPromptTemplate.from_template') as MockPrompt:
+        with patch('agents.image_agent.ChatPromptTemplate.from_template') as MockPrompt:
             mock_chain = MagicMock()
             mock_chain.invoke.return_value = "test_keyword"
             

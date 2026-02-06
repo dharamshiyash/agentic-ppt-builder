@@ -1,4 +1,4 @@
-from agentic_ppt_builder.graph import build_graph
+from graph import build_graph
 import os
 from dotenv import load_dotenv
 

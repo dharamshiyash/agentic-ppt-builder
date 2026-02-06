@@ -1,7 +1,7 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-from agentic_ppt_builder.graph import build_graph
+from graph import build_graph
 
 def test_full_pipeline_mocked():
     """Run the Full Graph with mocked agents to ensure flow is correct."""
@@ -17,10 +17,10 @@ def test_full_pipeline_mocked():
     }
     
     # We patch the AGENT functions themselves to strictly control output and avoid API calls
-    with patch('agentic_ppt_builder.graph.planner_agent') as mock_planner, \
-         patch('agentic_ppt_builder.graph.writer_agent') as mock_writer, \
-         patch('agentic_ppt_builder.graph.image_agent') as mock_image, \
-         patch('agentic_ppt_builder.graph.ppt_builder_agent') as mock_builder:
+    with patch('graph.planner_agent') as mock_planner, \
+         patch('graph.writer_agent') as mock_writer, \
+         patch('graph.image_agent') as mock_image, \
+         patch('graph.ppt_builder_agent') as mock_builder:
          
         # Setup returns
         mock_planner.return_value = {"presentation_outline": [{"title": "T1", "description": "D1"}]}

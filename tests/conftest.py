@@ -1,7 +1,7 @@
 
 import pytest
 from unittest.mock import MagicMock
-from agentic_ppt_builder.state import AgentState
+from state import AgentState
 
 @pytest.fixture
 def mock_agent_state():

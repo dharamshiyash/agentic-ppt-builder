@@ -1,7 +1,7 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-from agentic_ppt_builder.agents.planner_agent import planner_agent
+from agents.planner_agent import planner_agent
 
 def test_planner_agent_success(mock_agent_state):
     """Test planner agent generates correct outline structure."""
@@ -14,8 +14,8 @@ def test_planner_agent_success(mock_agent_state):
         ]
     }
 
-    with patch('agentic_ppt_builder.agents.planner_agent.ChatGroq') as MockLLM, \
-         patch('agentic_ppt_builder.agents.planner_agent.JsonOutputParser') as MockParser:
+    with patch('agents.planner_agent.ChatGroq') as MockLLM, \
+         patch('agents.planner_agent.JsonOutputParser') as MockParser:
         
         # Setup Mocks
         mock_chain = MagicMock()
@@ -40,7 +40,7 @@ def test_planner_agent_success(mock_agent_state):
     # Since chain is constructed locally, we cannot inject it.
     # However, we can use `patch` on the library components.
     
-    with patch('agentic_ppt_builder.agents.planner_agent.ChatGroq'), \
+    with patch('agents.planner_agent.ChatGroq'), \
          patch('langchain_core.prompts.ChatPromptTemplate.from_template') as MockPrompt:
          
         # We need to mock the chain result.
@@ -57,7 +57,7 @@ def test_planner_agent_success(mock_agent_state):
     # SIMPLIFIED: Just mock the `invoke` if we can access the object, but we can't.
     # Let's try mocking `ChatGroq` and making it behave.
     
-    with patch('agentic_ppt_builder.agents.planner_agent.ChatGroq') as MockLLM:
+    with patch('agents.planner_agent.ChatGroq') as MockLLM:
          # This is complex due to LCEL.
          # Let's try to pass a simpler test first: Ensure it handles Empty Topic.
          mock_agent_state['topic'] = ""
@@ -69,7 +69,7 @@ def test_planner_agent_empty_topic(mock_agent_state):
     result = planner_agent(mock_agent_state)
     assert result['presentation_outline'] == []
 
-@patch('agentic_ppt_builder.agents.planner_agent.ChatGroq')
+@patch('agents.planner_agent.ChatGroq')
 def test_planner_agent_mock_run(MockLLM, mock_agent_state):
     # This addresses the "Mocking" requirement.
     # We will simulate the chain behavior roughly or just ensure it attempts to call LLM.
@@ -86,7 +86,7 @@ def test_planner_agent_mock_run(MockLLM, mock_agent_state):
     
     # Force an exception during chain execution logic if possible
     # We can patch `JsonOutputParser` as well.
-    with patch('agentic_ppt_builder.agents.planner_agent.JsonOutputParser') as MockParser:
+    with patch('agents.planner_agent.JsonOutputParser') as MockParser:
          # If any component fails, it hits the exception block.
          mock_parser_instance = MagicMock()
          MockParser.return_value = mock_parser_instance

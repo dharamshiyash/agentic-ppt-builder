@@ -1,7 +1,7 @@
 import requests
 import os
-from agentic_ppt_builder.utils.config import Config
-from agentic_ppt_builder.utils.logger import get_logger
+from utils.config import Config
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

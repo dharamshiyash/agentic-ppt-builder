@@ -2,10 +2,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 
-from agentic_ppt_builder.state import AgentState
-from agentic_ppt_builder.utils.image_fetcher import fetch_image_url
-from agentic_ppt_builder.utils.logger import get_logger
-from agentic_ppt_builder.utils.config import Config
+from state import AgentState
+from utils.image_fetcher import fetch_image_url
+from utils.logger import get_logger
+from utils.config import Config
 
 logger = get_logger(__name__)
 

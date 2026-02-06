@@ -4,10 +4,10 @@ from langchain_groq import ChatGroq
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
 
-from agentic_ppt_builder.state import AgentState
+from state import AgentState
 
-from agentic_ppt_builder.utils.logger import get_logger
-from agentic_ppt_builder.utils.config import Config
+from utils.logger import get_logger
+from utils.config import Config
 
 logger = get_logger(__name__)
 

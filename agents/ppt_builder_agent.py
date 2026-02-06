@@ -1,7 +1,7 @@
-from agentic_ppt_builder.state import AgentState
-from agentic_ppt_builder.utils.ppt_utils import create_presentation
-from agentic_ppt_builder.utils.logger import get_logger
-from agentic_ppt_builder.utils.config import Config
+from state import AgentState
+from utils.ppt_utils import create_presentation
+from utils.logger import get_logger
+from utils.config import Config
 import os
 
 logger = get_logger(__name__)

@@ -1,9 +1,9 @@
 from langgraph.graph import StateGraph, END
-from agentic_ppt_builder.state import AgentState
-from agentic_ppt_builder.agents.planner_agent import planner_agent
-from agentic_ppt_builder.agents.writer_agent import writer_agent
-from agentic_ppt_builder.agents.image_agent import image_agent
-from agentic_ppt_builder.agents.ppt_builder_agent import ppt_builder_agent
+from state import AgentState
+from agents.planner_agent import planner_agent
+from agents.writer_agent import writer_agent
+from agents.image_agent import image_agent
+from agents.ppt_builder_agent import ppt_builder_agent
 
 def build_graph():
     workflow = StateGraph(AgentState)

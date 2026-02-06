@@ -7,7 +7,7 @@ import shutil
 # Add the current directory to sys.path to resolve local imports correctly on Streamlit Cloud
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from agentic_ppt_builder.graph import build_graph
+from graph import build_graph
 from dotenv import load_dotenv
 
 load_dotenv()

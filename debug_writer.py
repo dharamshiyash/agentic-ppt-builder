@@ -1,5 +1,5 @@
-from agentic_ppt_builder.agents.writer_agent import writer_agent
-from agentic_ppt_builder.state import AgentState
+from agents.writer_agent import writer_agent
+from state import AgentState
 from dotenv import load_dotenv
 import os
 
