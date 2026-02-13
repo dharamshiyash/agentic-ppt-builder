@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from graph import build_graph
 from utils.config import Config
 from utils.logger import get_logger
-from utils.async_runner import enqueue_job
+from tools.async_queue import enqueue_job
 
 logger = get_logger(__name__)
 

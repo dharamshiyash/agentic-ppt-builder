@@ -6,7 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 from utils.logger import get_logger
 from utils.config import Config
 from tools.cache import disk_cache
-from utils.resilience import api_retry
+from tools.retry import api_retry
 
 logger = get_logger(__name__)
 
