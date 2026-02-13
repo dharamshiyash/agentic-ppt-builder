@@ -1,39 +1,37 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 class Config:
-    """Application configuration."""
+    """
+    Centralized configuration management for the application.
+    Loads environment variables and sets default values.
+    """
     
     # API Keys
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
     
-    # Models
-    LLM_MODEL = os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
-    
-    # Paths
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
-    
-    # Defaults
+    # Application Settings
+    LLM_MODEL = "llama-3.3-70b-versatile" # scalable model
     DEFAULT_SLIDE_COUNT = 7
-    MAX_SLIDE_COUNT = 20
-    MIN_SLIDE_COUNT = 1
+    OUTPUT_DIR = os.getenv("OUTPUT_DIR", "outputs")
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
     
+    # Validation
     @classmethod
     def validate_keys(cls):
-        """Check for critical API keys."""
+        """Checks if essential API keys are present."""
         missing = []
         if not cls.GROQ_API_KEY:
             missing.append("GROQ_API_KEY")
-        # Unsplash is optional but recommended for images
         if not cls.UNSPLASH_ACCESS_KEY:
-             # Just a warning log might be appropriate in the caller
-             pass
-        return missing
+            missing.append("UNSPLASH_ACCESS_KEY")
+            
+        if missing:
+            raise ValueError(f"Missing API Keys: {', '.join(missing)}. Please set them in your .env file.")
 
-# Ensure output directory exists
+# Ensure output directory exists on startup
 os.makedirs(Config.OUTPUT_DIR, exist_ok=True)

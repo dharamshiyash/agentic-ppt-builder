@@ -16,11 +16,10 @@ def test_full_pipeline_mocked():
         "final_ppt_path": ""
     }
     
-    # We patch the AGENT functions themselves to strictly control output and avoid API calls
     with patch('graph.planner_agent') as mock_planner, \
          patch('graph.writer_agent') as mock_writer, \
          patch('graph.image_agent') as mock_image, \
-         patch('graph.ppt_builder_agent') as mock_builder:
+         patch('graph.builder_agent') as mock_builder:
          
         # Setup returns
         mock_planner.return_value = {"presentation_outline": [{"title": "T1", "description": "D1"}]}

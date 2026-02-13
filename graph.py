@@ -1,9 +1,9 @@
 from langgraph.graph import StateGraph, END
 from state import AgentState
-from agents.planner_agent import planner_agent
-from agents.writer_agent import writer_agent
-from agents.image_agent import image_agent
-from agents.ppt_builder_agent import ppt_builder_agent
+from agents.planner.agent import planner_agent
+from agents.writer.agent import writer_agent
+from agents.image.agent import image_agent
+from agents.builder.agent import builder_agent 
 
 def build_graph():
     workflow = StateGraph(AgentState)
@@ -12,7 +12,7 @@ def build_graph():
     workflow.add_node("planner", planner_agent)
     workflow.add_node("writer", writer_agent)
     workflow.add_node("image_agent", image_agent)
-    workflow.add_node("ppt_builder", ppt_builder_agent)
+    workflow.add_node("ppt_builder", builder_agent) # Note: Node name matched to app.py expectation
 
     # Add Edges
     workflow.set_entry_point("planner")

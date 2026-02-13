@@ -2,15 +2,14 @@ import streamlit as st
 import os
 import shutil
 import sys
-import os
-import shutil
 # Add the current directory to sys.path to resolve local imports correctly on Streamlit Cloud
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from graph import build_graph
-from dotenv import load_dotenv
+from utils.config import Config
+from utils.logger import get_logger
 
-load_dotenv()
+logger = get_logger(__name__)
 
 st.set_page_config(page_title="Agentic PPT Builder", layout="wide")
 
@@ -20,14 +19,17 @@ st.markdown("Generate professional presentations using a team of AI agents.")
 # Sidebar for basic inputs
 with st.sidebar:
     st.header("Configuration")
-    st.info("API Keys loaded from .env")
+    if Config.GROQ_API_KEY:
+        st.success("API Keys loaded successfully")
+    else:
+        st.error("API Keys missing! Check .env")
 
 # Main form
 with st.form("ppt_form"):
     topic = st.text_input("Presentation Topic", "Agentic AI in Healthcare")
     col1, col2 = st.columns(2)
     with col1:
-        num_slides = st.number_input("Number of Slides", min_value=1, max_value=20, value=7)
+        num_slides = st.number_input("Number of Slides", min_value=1, max_value=20, value=Config.DEFAULT_SLIDE_COUNT)
         font = st.selectbox("Font Style", ["Arial", "Calibri", "Times New Roman", "Consolas"])
     with col2:
         depth = st.selectbox("Content Depth", ["Minimal", "Concise", "Detailed"], index=1)
@@ -36,8 +38,11 @@ with st.form("ppt_form"):
     submitted = st.form_submit_button("Generate Presentation")
 
 if submitted:
-    if not os.getenv("GROQ_API_KEY"):
-        st.error("GROQ_API_KEY not found in .env file!")
+    try:
+        Config.validate_keys()
+    except ValueError as e:
+        st.error(str(e))
+        st.stop()
     else:
         status_container = st.container()
         

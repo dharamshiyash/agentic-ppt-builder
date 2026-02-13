@@ -1,36 +1,23 @@
-from typing import Dict, List
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import JsonOutputParser
-from pydantic import BaseModel, Field
 
-from state import AgentState
-
+from agents.planner.schema import PlannerOutput, ValidSlide
 from utils.logger import get_logger
 from utils.config import Config
+from tools.cache import disk_cache
 
 logger = get_logger(__name__)
 
-# Define Output Schema
-class ValidSlide(BaseModel):
-    title: str = Field(description="Title of the slide")
-    description: str = Field(description="Brief instruction on what content should be on this slide")
-
-class PlannerOutput(BaseModel):
-    outline: List[ValidSlide] = Field(description="List of slides for the presentation")
-
-def planner_agent(state: AgentState):
-    logger.info("--- PLANNER AGENT STARTED ---")
-    topic = state.get('topic', "")
-    count = state.get('slide_count', Config.DEFAULT_SLIDE_COUNT)
-    depth = state.get('depth', "Concise")
-
-    if not topic:
-        logger.error("No topic provided.")
-        return {"presentation_outline": []}
-
-    llm = ChatGroq(model=Config.LLM_MODEL, temperature=0.7)
+@disk_cache
+def generate_outline_service(topic: str, count: int, depth: str):
+    """
+    Core logic to generate a presentation outline using LLM.
+    Uses caching to avoid redundant calls for the same topic/settings.
+    """
+    logger.info(f"Generating outline for topic: '{topic}' with {count} slides.")
     
+    llm = ChatGroq(model=Config.LLM_MODEL, temperature=0.7)
     parser = JsonOutputParser(pydantic_object=PlannerOutput)
 
     prompt = ChatPromptTemplate.from_template(
@@ -58,11 +45,12 @@ def planner_agent(state: AgentState):
         
         # Normalize output if nested
         outline = response.get('outline', response) if isinstance(response, dict) else response
-        
-        return {"presentation_outline": outline}
+        logger.info(f"Successfully generated {len(outline)} slides.")
+        return outline
 
     except Exception as e:
-
-        logger.error(f"Planner Agent Error: {e}", exc_info=True)
-        # Fallback
-        return {"presentation_outline": [{"title": "Error", "description": "Failed to generate outline"}]}
+        logger.error(f"Planner Service Error: {e}", exc_info=True)
+        # Return structured error fallback
+        return [
+            {"title": "Error", "description": "Failed to generate outline due to an internal error."}
+        ]

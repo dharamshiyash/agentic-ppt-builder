@@ -1,11 +1,11 @@
 from graph import build_graph
-import os
-from dotenv import load_dotenv
+from utils.config import Config
+from utils.logger import get_logger
 
-load_dotenv()
+logger = get_logger(__name__)
 
 def debug_full_pipeline():
-    print("DEBUG: Starting Full Pipeline Trace")
+    logger.info("DEBUG: Starting Full Pipeline Trace")
     
     app = build_graph()
     

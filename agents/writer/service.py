@@ -1,32 +1,22 @@
-from typing import Dict, List
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import JsonOutputParser
-from pydantic import BaseModel, Field
+from typing import List, Dict, Any
 
-from state import AgentState, SlideContent
-
+from agents.writer.schema import WriterOutput, SlideContentOutput
 from utils.logger import get_logger
 from utils.config import Config
+from tools.cache import disk_cache
 
 logger = get_logger(__name__)
 
-class SlideContentOutput(BaseModel):
-    title: str = Field(description="Title of the slide")
-    content: str = Field(description="Bullet points or detailed text for the slide")
-
-class WriterOutput(BaseModel):
-    slides: List[SlideContentOutput] = Field(description="List of fully written slides")
-
-def writer_agent(state: AgentState):
-    logger.info("--- WRITER AGENT STARTED ---")
-    outline = state.get('presentation_outline', [])
-    depth = state.get('depth', "Concise")
-
-    if not outline:
-        logger.warning("No outline provided to Writer Agent.")
-        return {"slide_content": []}
-
+@disk_cache
+def write_content_service(outline: List[Dict[str, Any]], depth: str):
+    """
+    Core logic to write slide content.
+    """
+    logger.info("Writing content for slides...")
+    
     llm = ChatGroq(model=Config.LLM_MODEL, temperature=0.7)
     parser = JsonOutputParser(pydantic_object=WriterOutput)
 
@@ -57,7 +47,7 @@ def writer_agent(state: AgentState):
 
         slides = response.get('slides', response) if isinstance(response, dict) else response
         
-        # Convert to internal state format (add missing fields)
+        # Convert to internal state format (add missing fields for next steps)
         final_slides = []
         for s in slides:
             final_slides.append({
@@ -66,10 +56,10 @@ def writer_agent(state: AgentState):
                 "image_keyword": None,
                 "image_url": None
             })
-
-        return {"slide_content": final_slides}
+            
+        logger.info(f"Successfully wrote content for {len(final_slides)} slides.")
+        return final_slides
 
     except Exception as e:
-
-        logger.error(f"Writer Agent Error: {e}", exc_info=True)
-        return {"slide_content": []}
+        logger.error(f"Writer Service Error: {e}", exc_info=True)
+        return []
