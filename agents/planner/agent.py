@@ -7,9 +7,19 @@ logger = get_logger(__name__)
 
 def planner_agent(state: AgentState):
     """
-    Planner Agent Node.
-    Role: Converts topic → slide outline.
-    Does NOT generate content or images.
+    Planner Agent
+    -------------
+    Responsibilities:
+    - Convert topic and slide count into structured outline.
+    - Plan the flow and narrative of the presentation.
+    
+    Does NOT:
+    - Generate full slide text.
+    - Fetch images.
+    - Build PPT files.
+    
+    Input: AgentState (topic, slide_count, depth)
+    Output: AgentState (presentation_outline)
     """
     logger.info("--- PLANNER AGENT STARTED ---")
     

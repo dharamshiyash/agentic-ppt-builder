@@ -6,9 +6,19 @@ logger = get_logger(__name__)
 
 def writer_agent(state: AgentState):
     """
-    Writer Agent Node.
-    Role: Converts outline → bullet slide content.
-    Does NOT fetch images or build PPT.
+    Writer Agent
+    ------------
+    Responsibilities:
+    - Convert structured outline into detailed slide content.
+    - Generate bullet points and narrative text.
+    
+    Does NOT:
+    - Fetch images.
+    - Build PPT files.
+    - Change the outline structure.
+    
+    Input: AgentState (presentation_outline, depth)
+    Output: AgentState (slide_content)
     """
     logger.info("--- WRITER AGENT STARTED ---")
     

@@ -2,6 +2,12 @@ import pytest
 from unittest.mock import patch, MagicMock
 from agents.writer.agent import writer_agent
 
+@pytest.fixture(autouse=True)
+def mock_retry_settings():
+    """Disable tenacity retries during tests."""
+    with patch('agents.writer.service.api_retry', lambda x: x):
+        yield
+
 def test_writer_agent_no_outline(mock_agent_state):
     """Test writer returns empty if no outline."""
     mock_agent_state['presentation_outline'] = []

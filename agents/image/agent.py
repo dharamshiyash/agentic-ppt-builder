@@ -6,9 +6,20 @@ logger = get_logger(__name__)
 
 def image_agent(state: AgentState):
     """
-    Image Agent Node.
-    Role: Fetches relevant royalty-free images.
-    Does NOT modify text or structure.
+    Image Agent
+    -----------
+    Responsibilities:
+    - Analyze slide content to determine visual needs.
+    - Generate search keywords.
+    - Fetch relevant royalty-free images via Unsplash API.
+    
+    Does NOT:
+    - Modify slide text.
+    - Change slide structure.
+    - Create images from scratch (uses stock).
+    
+    Input: AgentState (slide_content)
+    Output: AgentState (slide_content with image_url)
     """
     logger.info("--- IMAGE AGENT STARTED ---")
     

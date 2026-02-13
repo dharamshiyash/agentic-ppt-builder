@@ -2,12 +2,15 @@ import streamlit as st
 import os
 import shutil
 import sys
+import time
+
 # Add the current directory to sys.path to resolve local imports correctly on Streamlit Cloud
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from graph import build_graph
 from utils.config import Config
 from utils.logger import get_logger
+from utils.async_runner import enqueue_job
 
 logger = get_logger(__name__)
 
@@ -24,6 +27,28 @@ with st.sidebar:
     else:
         st.error("API Keys missing! Check .env")
 
+def run_pipeline(topic, slide_count, font, depth):
+    """
+    Wrapper function to run the graph pipeline.
+    This is the function that gets enqueued.
+    """
+    logger.info(f"Starting pipeline for topic: {topic}")
+    app = build_graph()
+    
+    initial_state = {
+        "topic": topic,
+        "slide_count": slide_count,
+        "font": font,
+        "depth": depth,
+        "presentation_outline": [],
+        "slide_content": [],
+        "final_ppt_path": ""
+    }
+    
+    # Run the graph
+    final_state = app.invoke(initial_state)
+    return final_state
+
 # Main form
 with st.form("ppt_form"):
     topic = st.text_input("Presentation Topic", "Agentic AI in Healthcare")
@@ -38,70 +63,62 @@ with st.form("ppt_form"):
     submitted = st.form_submit_button("Generate Presentation")
 
 if submitted:
+    # 1. Configuration Validation
     try:
         Config.validate_keys()
     except ValueError as e:
-        st.error(str(e))
+        st.error(f"Configuration Error: {str(e)}")
         st.stop()
-    else:
-        status_container = st.container()
         
-        with st.status("🚀 Agents are working...", expanded=True) as status:
-            st.write("Initializing agents...")
+    # 2. Input Validation
+    if not topic or len(topic.strip()) < 3:
+        st.error("Please provide a valid topic (at least 3 characters).")
+        st.stop()
+
+    status_container = st.container()
+    
+    with st.status("🚀 Agents are working...", expanded=True) as status:
+        st.write("Initializing agents...")
+        
+        # 3. Async Execution Integration
+        try:
+            # Enqueue job (or run sync fallback)
+            job, is_async = enqueue_job(run_pipeline, topic, num_slides, font, depth)
             
-            # Initialize Graph
-            app = build_graph()
-            
-            initial_state = {
-                "topic": topic,
-                "slide_count": num_slides,
-                "font": font,
-                "depth": depth,
-                "presentation_outline": [],
-                "slide_content": [],
-                "final_ppt_path": ""
-            }
-            
-            st.write("📝 **Planner Agent** is structuring the presentation...")
-            # We can stream output or just run invoke
-            # For better UX, let's invoke and assume progress based on steps implies simple wait
-            # If we want granular updates, we could stream events.
-            
-            try:
-                # Running the graph
-                # Using invoke for simplicity, as stream might be overkill for this initial version
-                # But to update UI we can try to inspect output at each step if we iterate manually? 
-                # LangGraph `stream` method is best.
+            if is_async:
+                st.write(f"Job enqueued (ID: {job.id}). Waiting for workers...")
+                # Poll for completion
+                while not job.is_finished:
+                    time.sleep(2)
+                    job.refresh()
+                    if job.is_failed:
+                        st.error("Job failed during execution.")
+                        st.stop()
                 
-                final_state = None
-                for output in app.stream(initial_state):
-                    for key, value in output.items():
-                        if key == "planner":
-                            st.write("✅ **Planner Agent**: Outline created.")
-                            with st.expander("See Outline"):
-                                st.json(value.get("presentation_outline"))
-                        elif key == "writer":
-                            st.write("✅ **Writer Agent**: Content written.")
-                        elif key == "image_agent":
-                            st.write("✅ **Image Agent**: Images selected.")
-                        elif key == "ppt_builder":
-                            st.write("✅ **PPT Builder**: File generated.")
-                            final_state = value
+                final_state = job.result
+            else:
+                st.write("Running synchronously (Internal fallback)...")
+                final_state = job.result
+            
+            # 4. Result Handling
+            if final_state and "final_ppt_path" in final_state and final_state["final_ppt_path"]:
+                ppt_path = final_state["final_ppt_path"]
+                status.update(label="🎉 Presentation Ready!", state="complete", expanded=False)
                 
-                if final_state and "final_ppt_path" in final_state:
-                    ppt_path = final_state["final_ppt_path"]
-                    status.update(label="🎉 Presentation Ready!", state="complete", expanded=False)
-                    
-                    st.success(f"Presentation generated successfully: {topic}")
-                    
-                    with open(ppt_path, "rb") as file:
-                        btn = st.download_button(
-                            label="📥 Download .pptx",
-                            data=file,
-                            file_name=os.path.basename(ppt_path),
-                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                        )
-                        
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
+                st.success(f"Presentation generated successfully: {topic}")
+                
+                with open(ppt_path, "rb") as file:
+                    st.download_button(
+                        label="📥 Download .pptx",
+                        data=file,
+                        file_name=os.path.basename(ppt_path),
+                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                    )
+            else:
+                st.error("Presentation generation returned empty result.")
                 status.update(label="❌ Generation Failed", state="error")
+                
+        except Exception as e:
+            logger.error(f"Critical Application Error: {e}", exc_info=True)
+            st.error(f"An unexpected error occurred: {e}")
+            status.update(label="❌ System Error", state="error")

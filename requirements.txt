@@ -12,3 +12,6 @@ pydantic
 pytest
 pytest-mock
 
+tenacity
+redis
+rq

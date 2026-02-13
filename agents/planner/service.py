@@ -6,14 +6,16 @@ from agents.planner.schema import PlannerOutput, ValidSlide
 from utils.logger import get_logger
 from utils.config import Config
 from tools.cache import disk_cache
+from utils.resilience import api_retry
 
 logger = get_logger(__name__)
 
 @disk_cache
+@api_retry
 def generate_outline_service(topic: str, count: int, depth: str):
     """
     Core logic to generate a presentation outline using LLM.
-    Uses caching to avoid redundant calls for the same topic/settings.
+    Uses caching and automatic retries for resilience.
     """
     logger.info(f"Generating outline for topic: '{topic}' with {count} slides.")
     

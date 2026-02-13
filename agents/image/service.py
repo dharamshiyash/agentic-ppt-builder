@@ -6,10 +6,12 @@ from langchain_core.output_parsers import StrOutputParser
 from utils.logger import get_logger
 from utils.config import Config
 from tools.cache import disk_cache
+from utils.resilience import api_retry
 
 logger = get_logger(__name__)
 
 @disk_cache
+@api_retry
 def fetch_image_url(query: str) -> str:
     """
     Fetches an image URL from Unsplash based on the query.
@@ -43,6 +45,7 @@ def fetch_image_url(query: str) -> str:
     return f"https://dummyimage.com/600x400/cccccc/000000&text={query.replace(' ', '+')}"
 
 @disk_cache
+@api_retry
 def generate_image_keyword(title: str, content: str) -> str:
     """
     Uses LLM to generate a search keyword for the slide.

@@ -7,10 +7,12 @@ from agents.writer.schema import WriterOutput, SlideContentOutput
 from utils.logger import get_logger
 from utils.config import Config
 from tools.cache import disk_cache
+from utils.resilience import api_retry
 
 logger = get_logger(__name__)
 
 @disk_cache
+@api_retry
 def write_content_service(outline: List[Dict[str, Any]], depth: str):
     """
     Core logic to write slide content.

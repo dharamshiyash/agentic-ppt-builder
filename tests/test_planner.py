@@ -2,6 +2,12 @@ import pytest
 from unittest.mock import patch, MagicMock
 from agents.planner.agent import planner_agent
 
+@pytest.fixture(autouse=True)
+def mock_retry_settings():
+    """Disable tenacity retries during tests by replacing the decorator with identity."""
+    with patch('agents.planner.service.api_retry', lambda x: x):
+        yield
+
 def test_planner_agent_success(mock_agent_state):
     """Test planner agent generates correct outline structure."""
     

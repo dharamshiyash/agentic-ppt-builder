@@ -2,6 +2,12 @@ import pytest
 from unittest.mock import patch, MagicMock
 from agents.image.agent import image_agent
 
+@pytest.fixture(autouse=True)
+def mock_retry_settings():
+    """Disable tenacity retries during tests."""
+    with patch('agents.image.service.api_retry', lambda x: x):
+        yield
+
 def test_image_agent_no_slides(mock_agent_state):
     result = image_agent(mock_agent_state)
     assert result['slide_content'] == []

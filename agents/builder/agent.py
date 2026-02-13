@@ -8,9 +8,19 @@ logger = get_logger(__name__)
 
 def builder_agent(state: AgentState):
     """
-    PPT Builder Agent Node.
-    Role: Converts final structured slides → .pptx.
-    Handles layout and formatting only.
+    Builder Agent
+    -------------
+    Responsibilities:
+    - Take final structured slide data.
+    - Render text and images into a `.pptx` file.
+    - Handle layout, fonts, and formatting.
+    
+    Does NOT:
+    - Generate or modify content.
+    - Fetch images or data.
+    
+    Input: AgentState (slide_content, topic, font)
+    Output: AgentState (final_ppt_path)
     """
     logger.info("--- PPT BUILDER AGENT STARTED ---")
     
