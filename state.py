@@ -11,6 +11,7 @@ class AgentState(TypedDict):
     slide_count: int
     font: str
     depth: str
-    presentation_outline: List[Dict[str, str]] # List of {"title": "Slide Title", "description": "Brief description"}
-    slide_content: List[SlideContent]        # Final content structure
+    presentation_outline: List[Dict[str, str]]  # List of {"title": "Slide Title", "description": "Brief description"}
+    research_notes: Optional[Dict[str, str]]    # Per-slide web research snippets from ResearchAgent
+    slide_content: List[SlideContent]           # Final content structure
     final_ppt_path: str

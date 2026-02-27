@@ -1,53 +1,67 @@
 # 🤖 Agentic AI PowerPoint Builder
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B.svg)](https://streamlit.io/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Orchestration-blueviolet)](https://langchain-ai.github.io/langgraph/)
 
-A production-ready, multi-agent AI system that autonomously researches, plans, writes, and builds professional PowerPoint presentations. Powered by **LangGraph**, **Groq (Llama 3)**, and **Streamlit**.
-
----
-
-## 🚀 Features
-
-- **Multi-Agent Architecture**: Specialized agents for planning, writing, image sourcing, and slide building.
-- **Agentic Workflow**: Linear graph orchestration using LangGraph for robust state management.
-- **Smart Image Integration**: Automatically fetches relevant, royalty-free stock images via Unsplash.
-- **Production Grade**:
-  - **Modular Design**: Clean separation of concerns (Service/Agent/Schema pattern).
-  - **Caching Layer**: Persisted disk cache for LLM & API calls to reduce costs and latency.
-  - **Structured Logging**: Comprehensive logging for observability.
-  - **Configuration Management**: Centralized environment handling.
-- **Interactive UI**: User-friendly Streamlit interface for easy generation.
+A production-ready, **multi-agent AI system** that autonomously researches, plans, writes, and builds professional PowerPoint presentations. Powered by **LangGraph**, **Groq (Llama 3.3-70B)**, **DuckDuckGo Search**, **DALL-E 3**, and **Streamlit**.
 
 ---
 
 ## 🏗 Architecture
 
-The system operates as a pipeline of specialized agents:
+The system operates as a **5-agent pipeline** managed by a central orchestrator:
 
-1.  **Planner Agent** (`agents/planner`):
-    *   **Role**: Architect.
-    *   **Input**: Topic, Slide Count.
-    *   **Output**: Structured JSON outline of slide titles and descriptions.
-    *   *Does not generate full content.*
+![System Architecture](docs/architecture_diagram.png)
 
-2.  **Writer Agent** (`agents/writer`):
-    *   **Role**: Content Creator.
-    *   **Input**: Slide Outline.
-    *   **Output**: Detailed bullet points and narrative text for each slide.
+```
+User Input
+    ↓
+Orchestrator (orchestrator/agent_controller.py)
+    ↓
+PlannerAgent → ResearchAgent → WriterAgent → ImageAgent → BuilderAgent
+                    ↓                              ↓                ↓
+              [Tool 1: Web Search]    [Tool 2: Image Gen]   [Tool 3: PPT Tool]
+                  DuckDuckGo            DALL-E / Unsplash      python-pptx
+```
 
-3.  **Image Agent** (`agents/image`):
-    *   **Role**: Visual Designer.
-    *   **Input**: Slide Content.
-    *   **Output**: Selection of relevant stock image URLs.
-    *   *Uses intelligent keyword extraction.*
+---
 
-4.  **Builder Agent** (`agents/builder`):
-    *   **Role**: Publisher.
-    *   **Input**: Final structured data.
-    *   **Output**: `.pptx` file with professional layout.
+## 🤖 Agents
+
+| # | Agent | Package | Role |
+|---|---|---|---|
+| 1 | **PlannerAgent** | `agents/planner/` | Converts topic + slide count into a structured JSON outline |
+| 2 | **ResearchAgent** | `agents/research/` | Searches the web (DuckDuckGo) for factual slide content |
+| 3 | **WriterAgent** | `agents/writer/` | Writes detailed bullet-point content enriched with research facts |
+| 4 | **ImageAgent** | `agents/image/` | Generates or fetches an image per slide |
+| 5 | **BuilderAgent** | `agents/builder/` | Assembles all data into a `.pptx` file |
+
+Agents communicate exclusively through a shared **`AgentState`** TypedDict (see `state.py`). The **orchestrator** (`orchestrator/agent_controller.py`) manages the pipeline — agents are decoupled from each other.
+
+---
+
+## 🛠 Tools
+
+| # | Tool | File | Purpose |
+|---|---|---|---|
+| 1 | **Web Search Tool** | `tools/web_search_tool.py` | DuckDuckGo search — no API key required. Falls back to empty on failure. |
+| 2 | **Image Generation Tool** | `tools/image_generation_tool.py` | DALL-E 3 (primary) → Unsplash (fallback) → placeholder (final fallback) |
+| 3 | **PPT Generation Tool** | `tools/ppt_tool.py` | Wraps `python-pptx` to build formatted `.pptx` files |
+
+---
+
+## 🚀 Features
+
+- **5-Agent Multi-Agent Architecture** with clear role specialization
+- **3 Integrated Tools** (web search, image generation, PPT generation)
+- **Central Orchestrator** for a modular, maintainable pipeline
+- **Human-in-the-loop**: Interactive Streamlit UI + CLI with explicit user control
+- **Robust Error Handling**: `utils/error_handler.py` with `safe_run()`, `with_retry()`, fallback strategies
+- **Disk Caching**: All LLM/API calls cached to reduce cost and latency on repeat runs
+- **Structured Logging**: Comprehensive logging across all agents and tools
+- **Full Test Suite**: 10 test files with pytest + pytest-mock
 
 ---
 
@@ -55,81 +69,132 @@ The system operates as a pipeline of specialized agents:
 
 ### Prerequisites
 
-- Python 3.10 or higher
-- [Groq API Key](https://console.groq.com/) (for LLM)
-- [Unsplash Access Key](https://unsplash.com/developers) (for Images)
+| Requirement | Notes |
+|---|---|
+| Python 3.10+ | Required |
+| Groq API Key | **Required** — get at [console.groq.com](https://console.groq.com/) |
+| OpenAI API Key | Optional — enables DALL-E 3 image generation |
+| Unsplash Access Key | Optional — enables stock photo fetching |
 
 ### Setup
 
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/dharamshiyash/agentic-ppt-builder.git
-    cd agentic-ppt-builder
-    ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/dharamshiyash/agentic-ppt-builder.git
+cd agentic-ppt-builder
 
-2.  **Create Virtual Environment**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
+# 2. Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate   # On Windows: venv\Scripts\activate
 
-3.  **Install Dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
+# 3. Install dependencies
+pip install -r requirements.txt
 
-4.  **Configure Environment**
-    Copy the example environment file and add your API keys:
-    ```bash
-    cp .env.example .env
-    ```
-    Open `.env` and fill in your keys:
-    ```ini
-    GROQ_API_KEY=gsk_...
-    UNSPLASH_ACCESS_KEY=...
-    ```
+# 4. Configure environment
+cp .env.example .env
+# Edit .env and add your API keys
+```
+
+Your `.env` file:
+```ini
+GROQ_API_KEY=gsk_...            # Required
+UNSPLASH_ACCESS_KEY=...          # Optional
+OPENAI_API_KEY=sk-...            # Optional
+```
 
 ---
 
 ## ▶️ Usage
 
-### Run the App
-Launch the Streamlit interface:
+### Option 1 — Streamlit Web UI
+
 ```bash
 streamlit run app.py
 ```
 
-### Generated Outputs
-Presentations are saved in the `outputs/` directory by default.
+Then open [http://localhost:8501](http://localhost:8501) in your browser.
+
+### Option 2 — Command Line
+
+```bash
+python main.py --topic "Artificial Intelligence in Healthcare"
+
+# With options
+python main.py --topic "Climate Change" --slides 8 --font Arial --depth Detailed
+```
+
+CLI options:
+
+| Flag | Default | Description |
+|---|---|---|
+| `--topic` / `-t` | *(required)* | Presentation topic |
+| `--slides` / `-s` | `7` | Number of slides |
+| `--font` / `-f` | `Calibri` | Font (Arial, Calibri, Times New Roman, Consolas) |
+| `--depth` / `-d` | `Concise` | Content depth (Minimal, Concise, Detailed) |
+
+### Generated Output
+
+Presentations are saved to the `outputs/` directory as `.pptx` files.
 
 ---
 
 ## 🧪 Testing
 
-Run the automated test suite to verify system integrity:
-
 ```bash
-pytest
+pytest tests/ -v
 ```
+
+Test coverage:
+
+| Test File | What It Tests |
+|---|---|
+| `test_planner.py` | PlannerAgent and outline service |
+| `test_writer.py` | WriterAgent and content service |
+| `test_image.py` | ImageAgent and fetch/keyword services |
+| `test_ppt_builder.py` | BuilderAgent and PPTX creation |
+| `test_research_agent.py` | ResearchAgent and web search integration |
+| `test_web_search_tool.py` | Web search tool (DuckDuckGo) |
+| `test_error_handler.py` | safe_run, with_retry, handle_agent_error |
+| `test_integration.py` | Full pipeline integration |
+| `test_async_queue.py` | Async queue / sync fallback |
 
 ---
 
 ## 📂 Project Structure
 
 ```
-.
-├── agents/             # Agent modules (Planner, Writer, Image, Builder)
-│   ├── planner/        # Planner Agent logic
-│   ├── writer/         # Writer Agent logic
-│   ├── image/          # Image Agent logic
-│   └── builder/        # PPT Builder Agent logic
-├── tools/              # Shared tools (Caching, etc.)
-├── utils/              # Utilities (Config, Logger)
-├── tests/              # Unit and Integration tests
-├── app.py              # Streamlit Entrypoint
-├── graph.py            # LangGraph Orchestration
-├── requirements.txt    # Dependencies
-└── README.md           # Documentation
+agentic-ppt-builder/
+├── agents/
+│   ├── planner/        # PlannerAgent — slide outline generation
+│   ├── research/       # ResearchAgent — web research via DuckDuckGo
+│   ├── writer/         # WriterAgent — slide content generation
+│   ├── image/          # ImageAgent — image sourcing
+│   └── builder/        # BuilderAgent — PPTX file assembly
+├── tools/
+│   ├── web_search_tool.py      # Tool 1: DuckDuckGo web search
+│   ├── image_generation_tool.py # Tool 2: DALL-E / Unsplash image
+│   ├── ppt_tool.py             # Tool 3: python-pptx generation
+│   ├── cache.py                # Disk cache decorator
+│   ├── retry.py                # Tenacity retry decorator
+│   └── async_queue.py          # Redis/RQ async queue (optional)
+├── orchestrator/
+│   └── agent_controller.py    # Central pipeline manager
+├── utils/
+│   ├── config.py               # Environment & settings
+│   ├── logger.py               # Structured logging
+│   └── error_handler.py        # safe_run, with_retry, fallback helpers
+├── docs/
+│   ├── architecture_diagram.png
+│   ├── current_system_report.md
+│   └── improvement_report.md
+├── tests/                      # pytest test suite
+├── app.py                      # Streamlit UI entrypoint
+├── main.py                     # CLI entrypoint
+├── graph.py                    # LangGraph pipeline definition
+├── state.py                    # AgentState TypedDict
+├── requirements.txt
+├── .env.example
+└── LICENSE                     # MIT License
 ```
 
 ---

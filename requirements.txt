@@ -12,6 +12,15 @@ pydantic
 pytest
 pytest-mock
 
+# Retry / resilience
 tenacity
+
+# Async queue (optional, falls back to sync if Redis unavailable)
 redis
 rq
+
+# Tool 1: Web Search (DuckDuckGo, no API key required)
+ddgs
+
+# Tool 2: AI Image Generation (DALL-E 3)
+openai
