@@ -27,5 +27,6 @@ Thumbs.db
 
 # Project specific
 outputs/
-logs/
 .cache/
+logs/
+*.pptx

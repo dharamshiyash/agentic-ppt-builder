@@ -1,0 +1,34 @@
+# ── Core Dependencies ────────────────────────────────────────────────
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langchain-groq
+langgraph
+python-pptx
+streamlit
+requests
+python-dotenv
+pydantic
+
+# ── Testing ──────────────────────────────────────────────────────────
+pytest
+pytest-mock
+pytest-cov
+
+# ── Retry / Resilience ──────────────────────────────────────────────
+tenacity
+
+# ── Async Queue (optional, falls back to sync if Redis unavailable) ──
+redis
+rq
+
+# ── Tool 1: Web Search (DuckDuckGo, no API key required) ────────────
+ddgs
+
+# ── Tool 2: AI Image Generation (DALL-E 3) ──────────────────────────
+openai
+
+# ── Health Check Endpoint ────────────────────────────────────────────
+fastapi
+uvicorn
