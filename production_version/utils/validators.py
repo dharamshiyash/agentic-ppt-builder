@@ -210,3 +210,66 @@ def validate_all_inputs(
         "font": validate_font(font),
         "depth": validate_depth(depth),
     }
+
+
+# ── Safety Guardrail ────────────────────────────────────────────────────────
+
+# Regex patterns for unsafe content categories.
+# Matched case-insensitively against the raw topic string before pipeline execution.
+_UNSAFE_PATTERNS: list = [
+    # Illegal activities
+    r"\bhow to (make|build|create|synthesize)\b.*(bomb|weapon|explosive|drug|poison)",
+    r"\b(drug trafficking|money laundering|human trafficking)\b",
+    r"\b(hack|hacking|cyberattack|ddos|ransomware)\b.*(tutorial|how.?to|guide|step)",
+    r"\b(illegal|criminal)\b.*(activities|methods|techniques|guide)",
+    # Explicit violence
+    r"\b(murder|assassination|torture|kidnap|massacre)\b.*(how.?to|guide|instruction|plan)",
+    r"\b(weapons|guns|firearms)\b.*(illegal|undetected|untraceable|smuggl)",
+    # Harmful instructions
+    r"\b(suicide|self.?harm)\b.*(method|how.?to|guide|way|technique)",
+    r"\b(child|minor|underage)\b.*(exploit|abuse|inappropriate|sexual)",
+    # Terrorism / extremism
+    r"\b(terrorism|terrorist|extremist|radicali[sz]ation)\b",
+    r"\b(jihad|isis|al.?qaeda)\b.*(recruit|join|support|mani)",
+]
+
+_COMPILED_PATTERNS = [re.compile(p, re.IGNORECASE | re.DOTALL) for p in _UNSAFE_PATTERNS]
+
+
+def check_prompt_safety(topic: str) -> None:
+    """
+    Validate that the presentation topic does not contain unsafe or harmful content.
+
+    Scans the topic string against a curated set of regex patterns covering:
+        - Illegal activities (drug synthesis, trafficking, hacking guides)
+        - Explicit violence (murder instructions, weapons smuggling)
+        - Self-harm and exploitation content
+        - Terrorism and extremism promotion
+
+    This function is intentionally strict — it errs on the side of caution.
+    False positives are possible for edge-case academic phrasing; in that case,
+    the user should rephrase their topic more neutrally.
+
+    Args:
+        topic: The raw or sanitized topic string to check.
+
+    Returns:
+        None if the topic is safe.
+
+    Raises:
+        ValueError: If the topic matches any unsafe pattern.
+
+    Example:
+        >>> check_prompt_safety("Machine Learning in Healthcare")  # OK, returns None
+        >>> check_prompt_safety("How to make a bomb")              # Raises ValueError
+    """
+    if not topic:
+        return  # Empty topics are caught by validate_topic
+
+    for pattern in _COMPILED_PATTERNS:
+        if pattern.search(topic):
+            raise ValueError(
+                "Unsafe topic detected. This system cannot generate presentations "
+                "on topics involving illegal activities, violence, self-harm, or "
+                "extremism. Please choose a different topic."
+            )

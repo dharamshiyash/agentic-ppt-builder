@@ -27,7 +27,7 @@ from typing import Optional
 
 from utils.logger import get_logger, log_agent_step
 from config.settings import Config
-from utils.validators import validate_all_inputs, ValidationError
+from utils.validators import validate_all_inputs, ValidationError, check_prompt_safety
 from utils.error_handler import PipelineTimeoutError
 
 logger = get_logger(__name__)
@@ -71,6 +71,10 @@ def run_pipeline(
     slide_count = validated["slide_count"]
     font = validated["font"]
     depth = validated["depth"]
+
+    # ── Safety Guardrail ─────────────────────────────────────────────
+    # Runs after sanitization so we check the cleaned topic string.
+    check_prompt_safety(topic)
 
     log_agent_step(
         logger, "Orchestrator", "PIPELINE_START",

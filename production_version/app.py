@@ -133,6 +133,11 @@ if submitted:
             st.error(f"Input Error: {str(ve)}")
             status.update(label="❌ Validation Failed", state="error")
 
+        except ValueError as se:
+            # Catches safety guardrail rejections from check_prompt_safety()
+            st.error(f"⚠️ Content Safety Error: {str(se)}")
+            status.update(label="❌ Content Policy Violation", state="error")
+
         except Exception as e:
             logger.error(f"Critical Application Error: {e}", exc_info=True)
             st.error(f"An unexpected error occurred: {e}")
